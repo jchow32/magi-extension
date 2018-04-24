@@ -67,29 +67,35 @@ return (float)sumEdges/(float)(tempCluster->sizeCluster*(tempCluster->sizeCluste
 }
 
 
-int calNumSevereMutInCases(clustersSelected *tempCluster)
+int calNumSevereMutInCases(clustersSelected *tempCluster) // to modify, don't use
 {
 int totalSevereMut=0;
 	for (int count=0; count<tempCluster->sizeCluster; count++)
 	{
 		totalSevereMut=totalSevereMut+listNodes[tempCluster->nodeId[count]].numSevereMutInCases;
 	}
-return totalSevereMut;
+return totalSevereMut; // who uses this
 }
 
 
 
-int calNumMissenseMutIncases(clustersSelected *tempCluster)
+int calNumMissenseMutIncases(clustersSelected *tempCluster) // to modify, don't use
 {
 int totalMissenseMut=0;
 	for (int count=0; count<tempCluster->sizeCluster; count++)
 	{
 		totalMissenseMut=totalMissenseMut+listNodes[tempCluster->nodeId[count]].numMissenseMutInCases;
 	}
-return totalMissenseMut;
+return totalMissenseMut; // who uses this
 }
 
-
+float calAvgDysScore(clustersSelected *tempCluster) {
+	float totalDysScore=0;
+	for (int count=0; count<tempCluster->sizeCluster; count++) {
+		totalDysScore=totalDysScore+listNodes[tempCluster->nodeId[count]].dysregulationScore;
+	}
+	return (float)totalDysScore/(float)(tempCluster->sizeCluster)
+}
 
 
 int calSereveMutInControl(clustersSelected *tempCluster)
@@ -137,7 +143,9 @@ printf("%i\n", clus->sizeCluster);
 		totalClusterLength=totalClusterLength+listNodes[clus->nodeId[count]].length;
 		printf("%s\n", listNodes[clus->nodeId[count]].nodeName);
 	}
-printf("%i %i %i %i %f %f %f\n", totalClusterLength, clus->numMissenseMutInCases, clus->numSevereMutInCases, clus->numServeMutInControl, clus->averageCoexpresion, clus->averageEdgeDensity, clus->totalScore);
+// printf("%i %i %i %i %f %f %f\n", totalClusterLength, clus->numMissenseMutInCases, clus->numSevereMutInCases, clus->numServeMutInControl, clus->averageCoexpresion, clus->averageEdgeDensity, clus->totalScore);
+printf("%i %f %i %f %f %f\n", totalClusterLength, clus->dysregulationScore, clus->numServeMutInControl, clus->averageCoexpresion, clus->averageEdgeDensity, clus->totalScore);
+
 return 1;
 }
 
@@ -161,8 +169,10 @@ tempCluster = (clustersSelected *) malloc(sizeof(clustersSelected));
 	tempCluster->sizeCluster=clusterSize;
 	tempCluster->averageCoexpresion=calAvgCoExpr(tempCluster);
 	tempCluster->averageEdgeDensity=calAvgEdgeDensity(tempCluster);
-	tempCluster->numSevereMutInCases=calNumSevereMutInCases(tempCluster);
-	tempCluster->numMissenseMutInCases=calNumMissenseMutIncases(tempCluster);
+	// tempCluster->numSevereMutInCases=calNumSevereMutInCases(tempCluster); // to modify
+	// tempCluster->numMissenseMutInCases=calNumMissenseMutIncases(tempCluster); // to modify
+	// instead, get the average dysregulation score for the cluster
+	tempCluster->dysregulationScore=calAvgDysScore(tempCluster); // added
 	tempCluster->totalScore=calTotalScore(tempCluster);
 	tempCluster->numServeMutInControl=calSereveMutInControl(tempCluster);
 	tempCluster->used=false;
@@ -177,8 +187,9 @@ int copyClusterToList(clustersSelected *clus, int idToAdd)
 	listClusterSelected[idToAdd].sizeCluster=clus->sizeCluster;
 	listClusterSelected[idToAdd].averageCoexpresion=clus->averageCoexpresion;
 	listClusterSelected[idToAdd].averageEdgeDensity=clus->averageEdgeDensity;
-	listClusterSelected[idToAdd].numSevereMutInCases=clus->numSevereMutInCases;
-	listClusterSelected[idToAdd].numMissenseMutInCases=clus->numMissenseMutInCases;
+	// listClusterSelected[idToAdd].numSevereMutInCases=clus->numSevereMutInCases; // to modify
+	// listClusterSelected[idToAdd].numMissenseMutInCases=clus->numMissenseMutInCases; // to modify
+	listClusterSelected[idToAdd].dysregulationScore=clus->dysregulationScore; // added
 	listClusterSelected[idToAdd].totalScore=clus->totalScore;
 	listClusterSelected[idToAdd].numServeMutInControl=clus->numServeMutInControl;
 	listClusterSelected[idToAdd].seedScore=clus->seedScore;
@@ -330,8 +341,9 @@ bool matched;
 		}
 	}
 	
-	tempClust->numMissenseMutInCases=calNumMissenseMutIncases(tempClust);
-	tempClust->numSevereMutInCases=calNumSevereMutInCases(tempClust);
+	// tempClust->numMissenseMutInCases=calNumMissenseMutIncases(tempClust); // to modify
+	// tempClust->numSevereMutInCases=calNumSevereMutInCases(tempClust); // to modify
+	tempClust->dysregulationScore=calAvgDysScore(tempClust); // added
 	tempClust->numServeMutInControl=calSereveMutInControl(tempClust);
 	tempClust->averageCoexpresion=calAvgCoExpr(tempClust);
 	tempClust->averageEdgeDensity=calAvgEdgeDensity(tempClust);
@@ -571,7 +583,9 @@ int totalClusterLength=0;
 		totalClusterLength=totalClusterLength+listNodes[listClusterSelected[clusterId].nodeId[count]].length;
 		printf("%s\n", listNodes[listClusterSelected[clusterId].nodeId[count]].nodeName);
 	}
-printf("%i %i %i %i %f %f %f\n", totalClusterLength, listClusterSelected[clusterId].numMissenseMutInCases,listClusterSelected[clusterId].numSevereMutInCases, listClusterSelected[clusterId].numServeMutInControl, listClusterSelected[clusterId].averageCoexpresion, listClusterSelected[clusterId].averageEdgeDensity, listClusterSelected[clusterId].totalScore);
+// printf("%i %i %i %i %f %f %f\n", totalClusterLength, listClusterSelected[clusterId].numMissenseMutInCases,listClusterSelected[clusterId].numSevereMutInCases, listClusterSelected[clusterId].numServeMutInControl, listClusterSelected[clusterId].averageCoexpresion, listClusterSelected[clusterId].averageEdgeDensity, listClusterSelected[clusterId].totalScore);
+printf("%i %f %i %f %f %f\n", totalClusterLength, listClusterSelected[clusterId].dysregulationScore, listClusterSelected[clusterId].numServeMutInControl, listClusterSelected[clusterId].averageCoexpresion, listClusterSelected[clusterId].averageEdgeDensity, listClusterSelected[clusterId].totalScore);
+
 }
 
 
@@ -617,8 +631,9 @@ for (int count=0; count<clus->sizeCluster; count++)
 }
 
 	tempClus->nodeId[oldNodeIndex]=newNodeId;
-	tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus);
-	tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus);
+	// tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus); // to modify
+	// tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus); // to modify
+	tempClus->dysregulationScore=calAvgDysScore(tempClus); // added
 	tempClus->numServeMutInControl=calSereveMutInControl(tempClus);
 	tempClus->averageCoexpresion=calAvgCoExpr(tempClus);
 	tempClus->averageEdgeDensity=calAvgEdgeDensity(tempClus);
@@ -639,8 +654,9 @@ for (int count=0; count<clus->sizeCluster; count++)
 	tempClus->nodeId[clus->sizeCluster]=newNodeId;
 	
 
-	tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus);
-	tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus);
+	// tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus); // to modify
+	// tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus); // to modify
+	tempClus->dysregulationScore=calAvgDysScore(tempClus); // added
 	tempClus->numServeMutInControl=calSereveMutInControl(tempClus);
 	tempClus->averageCoexpresion=calAvgCoExpr(tempClus);
 	tempClus->averageEdgeDensity=calAvgEdgeDensity(tempClus);
@@ -665,8 +681,9 @@ for (int count=0; count<clus->sizeCluster; count++)
 	
 }
 
-	tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus);
-	tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus);
+	// tempClus->numMissenseMutInCases=calNumMissenseMutIncases(tempClus); // to modify
+	// tempClus->numSevereMutInCases=calNumSevereMutInCases(tempClus); // to modify
+	tempClus->dysregulationScore=calAvgDysScore(tempClus); // added
 	tempClus->numServeMutInControl=calSereveMutInControl(tempClus);
 	tempClus->averageCoexpresion=calAvgCoExpr(tempClus);
 	tempClus->averageEdgeDensity=calAvgEdgeDensity(tempClus);
@@ -686,8 +703,9 @@ int copyClusToAnotherClus(clustersSelected *clus, clustersSelected *clus2)
 		clus->nodeId[count]=clus2->nodeId[count];
 	}
 	
-	clus->numMissenseMutInCases=clus2->numMissenseMutInCases;
-	clus->numSevereMutInCases=clus2->numSevereMutInCases;
+	// clus->numMissenseMutInCases=clus2->numMissenseMutInCases; // to modify
+	// clus->numSevereMutInCases=clus2->numSevereMutInCases; // to modify
+	clus->dysregulationScore=clus2->dysregulationScore; // added
 	clus->numServeMutInControl=clus2->numServeMutInControl;
 	clus->averageCoexpresion=clus2->averageCoexpresion;
 	clus->averageEdgeDensity=clus2->averageEdgeDensity;
@@ -931,7 +949,7 @@ int main(int argv, char *argc[])
 
 	srand(time(NULL)+randomNum);
 	createPPI_Graph(fp1);
-        assignScorePrecalculated(fp2);
+        assignScorePrecalculated(fp2); // trace
         createCoExpresionGeneHash(fp3);
 	createCoExpresionMatix(fp4);
 	readPathFiles(fp5);
