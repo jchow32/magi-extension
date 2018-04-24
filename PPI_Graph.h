@@ -23,8 +23,10 @@ typedef struct PPI_Node{
 	int nodeId;
 	char nodeName[geneNameLen]; // protein/gene name
 
-	int numSevereMutInCases;
-	int numMissenseMutInCases;
+	// int numSevereMutInCases;
+	// int numMissenseMutInCases;
+	int numDysregulationScore; // is this even used?
+	float dysregulationScore; //added
 	int numSevereMutInControl;
 	
 	double prob;
@@ -55,7 +57,7 @@ int assignScoreToBothControlandCases(FILE *, FILE *, FILE *, FILE *, FILE *, boo
 int assignScorePrecalculated(FILE *);
 int createCoExpresionGeneHash(FILE *);
 int isConnectedPPI(int, int);
-double log_N_Choose_M(int , int);
+double log_N_Choose_M(int , int); // maybe will not use
 bool isSubGraphConnectedComponent(int *, int); // a list of node Ids and the number of noces
 bool isSubGraphConnectedComponenti_WithCoExpr(int *, int);
 #endif
