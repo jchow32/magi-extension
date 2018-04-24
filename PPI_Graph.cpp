@@ -8,8 +8,9 @@
 PPI_Node listNodes[maxNumNode];
 int numNodes=0;
 int coExpresGeneNum=0;
-int totalSevereMutInCases=0;
-int totalMissenseMutInCases=0;
+// int totalSevereMutInCases=0; //
+// int totalMissenseMutInCases=0; // Previously these numbers were integers, but they now can be real- positive, negative
+int totalDysScore=0; // added
 int totalSevereMutInControl=0;
 int totalLengthGenes=0;
 float allNodeMeanValue=0;
@@ -19,6 +20,7 @@ float coexpressionPValue[102];
 float meanCoExpression, varianceCoExpression;
 coExpresionGeneHash coExpresionGeneHashTable[maxNumNode];
 float coExpresionMatrix[maxNumNode][maxNumNode];// The node is is the same as PPI node id. The nodes which are not in PPI network are discarded.
+float avgDysregulationScore;
 
 int createCoExpresionMatix(FILE *fpCoExpresionMatrix)
 {
@@ -120,7 +122,7 @@ int nodeId1, nodeId2;
 }
 
 
-double log_N_Choose_M(int n, int m)
+double log_N_Choose_M(int n, int m) // maybe do not use this anymore
 {
 double val=0;
 
@@ -139,42 +141,55 @@ return val;
 }
 
 
-double calNewProbValue(int nodeId)
+double calNewProbValue(int nodeId, float avgScore) // trace ... instead of the number of severe and missense mutations in cases, you only have dysregulation score
 {
 	
-
-	listNodes[nodeId].weightCases=log_N_Choose_M(totalSevereMutInCases, listNodes[nodeId].numSevereMutInCases) + listNodes[nodeId].numSevereMutInCases * log(listNodes[nodeId].prob) + (totalSevereMutInCases-listNodes[nodeId].numSevereMutInCases)*log(1-listNodes[nodeId].prob);
-	listNodes[nodeId].weightCases=listNodes[nodeId].weightCases+log_N_Choose_M(totalMissenseMutInCases, listNodes[nodeId].numMissenseMutInCases)+ listNodes[nodeId].numMissenseMutInCases * log(listNodes[nodeId].prob)+(totalMissenseMutInCases-listNodes[nodeId].numMissenseMutInCases)*log(1-listNodes[nodeId].prob);
+	/*
+	listNodes[nodeId].weightCases=log_N_Choose_M(totalSevereMutInCases, listNodes[nodeId].numSevereMutInCases)
+			+ listNodes[nodeId].numSevereMutInCases * log(listNodes[nodeId].prob) +
+			(totalSevereMutInCases-listNodes[nodeId].numSevereMutInCases)*log(1-listNodes[nodeId].prob);
+	listNodes[nodeId].weightCases=listNodes[nodeId].weightCases
+			+log_N_Choose_M(totalMissenseMutInCases, listNodes[nodeId].numMissenseMutInCases)
+			+ listNodes[nodeId].numMissenseMutInCases * log(listNodes[nodeId].prob)+
+			(totalMissenseMutInCases-listNodes[nodeId].numMissenseMutInCases)*log(1-listNodes[nodeId].prob);
 	
 	listNodes[nodeId].weightCases=-1*listNodes[nodeId].weightCases;
 	if (listNodes[nodeId].numSevereMutInCases + listNodes[nodeId].numMissenseMutInCases==0)
 		listNodes[nodeId].weightCases=0;
+	*/
+	// dysregulation score can be negative, positive, so doesn't seem like log2 fold change could be used simply
+	listNodes[nodeId].weightCases = fabsf((float)(listNodes[nodeId].dysregulationScore - avgScore) / avgScore)
+
 	//printf("%lf\n", listNodes[nodeId].weightCases);
 }
 
 
-int assignScorePrecalculated(FILE *fpPredefined)
+int assignScorePrecalculated(FILE *fpPredefined) // trace
 {
 char geneName[geneNameLen];
 float weight;
-int numSevereMutInCases, numMissenseInCases;
+// int numSevereMutInCases, numMissenseInCases; // trace ... change to float or double dysregulation score
+float dysregulationScore; // added
 int controlCount;
 float length;
 totalLengthGenes=0;
-	while(fscanf(fpPredefined,"%s %f %i %i %i %f\n", geneName, &weight, &numSevereMutInCases, &numMissenseInCases, &controlCount, &length)!=EOF)
+	// while(fscanf(fpPredefined,"%s %f %i %i %i %f\n", geneName, &weight, &numSevereMutInCases, &numMissenseInCases, &controlCount, &length)!=EOF)
+	while(fscanf(fpPredefined,"%s %f %f %i %f\n", geneName, &weight, &dysregulationScore, &controlCount, &length)!=EOF) // added
+
 	{
 		for (int count=0; count<numNodes; count++)
 		{
 			if (strcmp(geneName, listNodes[count].nodeName)==0)
 			{
-				listNodes[count].numSevereMutInCases=numSevereMutInCases;
+				// listNodes[count].numSevereMutInCases=numSevereMutInCases;
 				listNodes[count].weightCases=weight;
-				listNodes[count].numMissenseMutInCases=numMissenseInCases;
+				// listNodes[count].numMissenseMutInCases=numMissenseInCases;
+				listNodes[count].dysregulationScore=dysregulationScore; // added
 				listNodes[count].numSevereMutInControl=controlCount;
 				listNodes[count].length=(int)length;
 				totalLengthGenes=totalLengthGenes+(int)length;
-				totalSevereMutInCases=totalSevereMutInCases+numSevereMutInCases;
-				totalMissenseMutInCases=totalMissenseMutInCases+numMissenseInCases;
+				// totalSevereMutInCases=totalSevereMutInCases+numSevereMutInCases;
+				// totalMissenseMutInCases=totalMissenseMutInCases+numMissenseInCases;
 				totalNodesWithScoreAssigned++;
 			///THE CONTROL MUTATIONS IS NOT ADDED YET (YOU SHOULD ADD IT)	
 				allNodeMeanValue=allNodeMeanValue+weight;
@@ -183,8 +198,6 @@ totalLengthGenes=0;
 	
 	}
 
-
-
 	
 	allNodeMeanValue=(float)allNodeMeanValue/(float)totalNodesWithScoreAssigned;
 	for (int count=0; count<numNodes; count++)
@@ -192,7 +205,6 @@ totalLengthGenes=0;
 		allNodesSTD=allNodesSTD+(listNodes[count].weightCases-allNodeMeanValue)*(listNodes[count].weightCases-allNodeMeanValue);
 	}
 	allNodesSTD=sqrt((float)allNodesSTD/(float)totalNodesWithScoreAssigned);
-
 
 
 /*	while(fscanf(fpControl,"%s\t%i\n", geneName, &controlCount)!=EOF)
@@ -211,24 +223,26 @@ totalLengthGenes=0;
 }
 
 
-int assignScoreToBothControlandCases(FILE *fpCases, FILE *fpControl, FILE *fpGeneLen, FILE *filterFile, FILE *fpOutputGeneScore, bool filter)
+int assignScoreToBothControlandCases(FILE *fpCases, FILE *fpControl, FILE *fpGeneLen, FILE *filterFile, FILE *fpOutputGeneScore, bool filter) // trace
 {
 char geneName[geneNameLen];
 int numTruncatingControl;
-double variantScoreCases;
-char variantSubtype[20];
-int countTotal=0, randId;
+float dysScore; // added
+// double variantScoreCases;
+// char variantSubtype[20];
+int countTotal=0, randId; // is randId used?
 double len;
-double temp;
+double temp; // is temp used?
 srand(time(NULL));
-
-	while(fscanf(fpCases, "%s\t%i\t%lf%s\n", geneName, &numTruncatingControl, &variantScoreCases, variantSubtype)!=EOF)
+	// while(fscanf(fpCases, "%s\t%i\t%lf%s\n", geneName, &numTruncatingControl, &variantScoreCases, variantSubtype)!=EOF) // change to accept input which has gene \t dysregulation_score
+	while(fscanf(fpCases, "%s\t%f\n", geneName, dysScore)!=EOF) // change to accept input which has gene \t dysregulation_score
 	{
 		for (int count=0; count<numNodes; count++)
 		{
+			/*
 			if (strcmp(geneName, listNodes[count].nodeName)==0 && (strcmp(variantSubtype,"3n-non-frameshifting")==0 || strcmp(variantSubtype,"frameshift")==0 || strcmp(variantSubtype,"nonsense")==0 || strcmp(variantSubtype,"splice")==0 || strcmp(variantSubtype,"splice-indel")==0 || strcmp(variantSubtype,"3n-non-frameshifting-stop")==0 || strcmp( variantSubtype,"frameshift-near-splice")==0  || strcmp(variantSubtype, "stop_gained")==0 || strcmp(variantSubtype,"splice_acceptor")==0 || strcmp(variantSubtype,"splice_donor")==0))
 			{
-				listNodes[count].numSevereMutInCases++;
+				listNodes[count].numSevereMutInCases++; // incremented because sometimes the same gene will appear multiple times, each time adding 1 mutation
 				listNodes[count].weightCases=listNodes[count].weightCases+1;
 				countTotal++;
 				totalSevereMutInCases++;
@@ -238,6 +252,14 @@ srand(time(NULL));
 				listNodes[count].weightCases=listNodes[count].weightCases+1;
 				countTotal++;
 				totalMissenseMutInCases++;
+			}
+			*/
+			if (strcmp(geneName, listNodes[count].nodeName)==0) { // added
+				// listNodes[count].numDysregulationScore++; // may have no purpose
+				listNodes[count].dysregulationScore = dysScore; // not incremented because there should only be 1 dysregulation score per geneName?
+				listNodes[count].weightCases=listNodes[count].weightCases+1;
+				countTotal++;
+				totalDysScore++;
 			}
 		}		
 	}
@@ -284,13 +306,14 @@ srand(time(NULL));
 		}
 	}
 
+avgDysregulationScore = (float)totalDysScore / (float)countTotal // added
 
 for (int count=0; count<numNodes; count++)
 {
-	listNodes[count].prob=(double)listNodes[count].length/(double)totalLengthGenes;
+	listNodes[count].prob=(double)listNodes[count].length/(double)totalLengthGenes; // seems like with dysregulation score, does not rely on .prob and does not rely on gene length
 	//printf("%lf %i\n", log(listNodes[count].prob), listNodes[count].numMissenseMutInCases);
 	listNodes[count].weightCases=0;
-	calNewProbValue(count);
+	calNewProbValue(count, avgDysregulationScore);
 	
 }
 
@@ -310,9 +333,11 @@ if (filter==true)
 }
 
 
-for (int count=0; count<numNodes; count++)
+for (int count=0; count<numNodes; count++) // trace
 {
-	fprintf(fpOutputGeneScore,"%s %lf %i %i %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].numSevereMutInCases, listNodes[count].numMissenseMutInCases, listNodes[count].weightControl, listNodes[count].length);
+	// fprintf(fpOutputGeneScore,"%s %lf %i %i %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].numSevereMutInCases, listNodes[count].numMissenseMutInCases, listNodes[count].weightControl, listNodes[count].length);
+	fprintf(fpOutputGeneScore,"%s %lf %f %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].dysregulationScore, listNodes[count].weightControl, listNodes[count].length);
+
 }
 	
 fclose(fpOutputGeneScore);
