@@ -66,7 +66,7 @@ return (float)sumEdges/(float)(tempCluster->sizeCluster*(tempCluster->sizeCluste
 
 }
 
-
+/*
 int calNumSevereMutInCases(clustersSelected *tempCluster) // to modify, don't use
 {
 int totalSevereMut=0;
@@ -88,13 +88,14 @@ int totalMissenseMut=0;
 	}
 return totalMissenseMut; // who uses this
 }
+*/
 
 float calAvgDysScore(clustersSelected *tempCluster) {
 	float totalDysScore=0;
 	for (int count=0; count<tempCluster->sizeCluster; count++) {
 		totalDysScore=totalDysScore+listNodes[tempCluster->nodeId[count]].dysregulationScore;
 	}
-	return (float)totalDysScore/(float)(tempCluster->sizeCluster)
+	return (float)totalDysScore/(float)(tempCluster->sizeCluster);
 }
 
 
