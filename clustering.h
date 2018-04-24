@@ -22,8 +22,9 @@ typedef struct clustersSelected{
 	float averageCoexpresion;//average pairwise coexpresion
 	float averageEdgeDensity;
 	
-	int numSevereMutInCases;
-	int numMissenseMutInCases;
+	// int numSevereMutInCases; // to modify
+	// int numMissenseMutInCases; // to modify
+	float dysregulationScore;
 	int numServeMutInControl;
 	bool used;
 }clustersSelected;
