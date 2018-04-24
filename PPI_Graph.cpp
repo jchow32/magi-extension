@@ -158,7 +158,7 @@ double calNewProbValue(int nodeId, float avgScore) // trace ... instead of the n
 		listNodes[nodeId].weightCases=0;
 	*/
 	// dysregulation score can be negative, positive, so doesn't seem like log2 fold change could be used simply
-	listNodes[nodeId].weightCases = fabsf((float)(listNodes[nodeId].dysregulationScore - avgScore) / avgScore)
+	listNodes[nodeId].weightCases = fabsf((float)(listNodes[nodeId].dysregulationScore - avgScore) / avgScore);
 
 	//printf("%lf\n", listNodes[nodeId].weightCases);
 }
@@ -235,7 +235,7 @@ double len;
 double temp; // is temp used?
 srand(time(NULL));
 	// while(fscanf(fpCases, "%s\t%i\t%lf%s\n", geneName, &numTruncatingControl, &variantScoreCases, variantSubtype)!=EOF) // change to accept input which has gene \t dysregulation_score
-	while(fscanf(fpCases, "%s\t%f\n", geneName, dysScore)!=EOF) // change to accept input which has gene \t dysregulation_score
+	while(fscanf(fpCases, "%s\t%f\n", geneName, &dysScore)!=EOF) // change to accept input which has gene \t dysregulation_score
 	{
 		for (int count=0; count<numNodes; count++)
 		{
@@ -306,7 +306,7 @@ srand(time(NULL));
 		}
 	}
 
-avgDysregulationScore = (float)totalDysScore / (float)countTotal // added
+avgDysregulationScore = (float)totalDysScore / (float)countTotal; // added
 
 for (int count=0; count<numNodes; count++)
 {
