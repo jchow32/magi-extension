@@ -400,7 +400,7 @@ int main(int argv, char *argc[])
 				fp3=fopen(argc[count+1],"r");
 				countNumParamters++;
 			}
-		if (strcmp(argc[count], "-l")==0) // Gene Length
+		if (strcmp(argc[count], "-l")==0) // Gene Length // When is this used anyways?
 			{
 				fp4=fopen(argc[count+1],"r");
 				countNumParamters++;
@@ -429,7 +429,7 @@ int main(int argv, char *argc[])
 
 	if (countNumParamters!=7)
 	{
-		printf("usage:\n needs seven paramters to run\n -p <PPI Network> \n -c <cases mutaion list> \n -d <control mutation list> \n -l <Length of each genes> \n -h <Gene CoExpression Id> \n -e <CoExpression Matrix> \n -i <random run id> \n -f <filter genes (optional, defualt is no gene is filtered) \n");
+		printf("usage:\n needs seven parameters to run\n -p <PPI Network> \n -c <case log2 fold dysregulation list> \n -d <control mutation list> \n -l <Length of each genes> \n -h <Gene CoExpression Id> \n -e <CoExpression Matrix> \n -i <random run id> \n -f <filter genes (optional, defualt is no gene is filtered) \n");
 		return 0;
 	}
 
@@ -446,7 +446,7 @@ int main(int argv, char *argc[])
 	//numColor=atoi(argc[7]);//
 	//controlServMutAllowed=atoi(argc[8]);
 	createPPI_Graph(fp);
-	assignScoreToBothControlandCases(fp2, fp3, fp4, fp7, fp8, filter);
+	assignScoreToBothControlandCases(fp2, fp3, fp4, fp7, fp8, filter); // trace
 	createCoExpresionGeneHash(fp5);
 	createCoExpresionMatix(fp6);
 
