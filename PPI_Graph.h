@@ -27,6 +27,7 @@ typedef struct PPI_Node{
 	// int numMissenseMutInCases;
 	int numDysregulationScore; // is this even used?
 	float dysregulationScore; //added
+	float pValue; // added
 	int numSevereMutInControl;
 	
 	double prob;
