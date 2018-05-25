@@ -141,7 +141,7 @@ return val;
 }
 
 
-double calNewProbValue(int nodeId, float avgScore) // trace ... instead of the number of severe and missense mutations in cases, you only have dysregulation score
+double calNewProbValue(int nodeId, float avgScore) // trace ... instead of the number of severe and missense mutations in cases, you only have dysregulation score and p-value
 {
 	
 	/*
@@ -158,7 +158,13 @@ double calNewProbValue(int nodeId, float avgScore) // trace ... instead of the n
 		listNodes[nodeId].weightCases=0;
 	*/
 	// dysregulation score can be negative, positive, so doesn't seem like log2 fold change could be used simply
-	listNodes[nodeId].weightCases = fabsf((float)(listNodes[nodeId].dysregulationScore - avgScore) / avgScore);
+	// listNodes[nodeId].weightCases = fabsf((float)(listNodes[nodeId].dysregulationScore - avgScore) / avgScore);
+	if (listNodes[nodeId].pValue < 0.05) {
+		listNodes[nodeId].weightCases = fabsf(avgScore - (float)listNodes[nodeId].dysregulationScore);
+	}
+	else {
+		listNodes[nodeId].weightCases = 0;
+	}
 
 	//printf("%lf\n", listNodes[nodeId].weightCases);
 }
@@ -170,11 +176,12 @@ char geneName[geneNameLen];
 float weight;
 // int numSevereMutInCases, numMissenseInCases; // trace ... change to float or double dysregulation score
 float dysregulationScore; // added
+float pValue;
 int controlCount;
 float length;
 totalLengthGenes=0;
 	// while(fscanf(fpPredefined,"%s %f %i %i %i %f\n", geneName, &weight, &numSevereMutInCases, &numMissenseInCases, &controlCount, &length)!=EOF)
-	while(fscanf(fpPredefined,"%s %f %f %i %f\n", geneName, &weight, &dysregulationScore, &controlCount, &length)!=EOF) // added
+	while(fscanf(fpPredefined,"%s %f %f %f %i %f\n", geneName, &weight, &dysregulationScore, &pValue, &controlCount, &length)!=EOF) // added
 
 	{
 		for (int count=0; count<numNodes; count++)
@@ -185,6 +192,7 @@ totalLengthGenes=0;
 				listNodes[count].weightCases=weight;
 				// listNodes[count].numMissenseMutInCases=numMissenseInCases;
 				listNodes[count].dysregulationScore=dysregulationScore; // added
+				listNodes[count].pValue=pValue; // added
 				listNodes[count].numSevereMutInControl=controlCount;
 				listNodes[count].length=(int)length;
 				totalLengthGenes=totalLengthGenes+(int)length;
@@ -228,6 +236,7 @@ int assignScoreToBothControlandCases(FILE *fpCases, FILE *fpControl, FILE *fpGen
 char geneName[geneNameLen];
 int numTruncatingControl;
 float dysScore; // added
+float pValue; // added
 // double variantScoreCases;
 // char variantSubtype[20];
 int countTotal=0, randId; // is randId used?
@@ -235,7 +244,7 @@ double len;
 double temp; // is temp used?
 srand(time(NULL));
 	// while(fscanf(fpCases, "%s\t%i\t%lf%s\n", geneName, &numTruncatingControl, &variantScoreCases, variantSubtype)!=EOF) // change to accept input which has gene \t dysregulation_score
-	while(fscanf(fpCases, "%s\t%f\n", geneName, &dysScore)!=EOF) // change to accept input which has gene \t dysregulation_score
+	while(fscanf(fpCases, "%s\t%f\t%f\n", geneName, &dysScore, &pValue)!=EOF) // change to accept input which has gene \t dysregulation_score \t p-value
 	{
 		for (int count=0; count<numNodes; count++)
 		{
@@ -257,9 +266,10 @@ srand(time(NULL));
 			if (strcmp(geneName, listNodes[count].nodeName)==0) { // added
 				// listNodes[count].numDysregulationScore++; // may have no purpose
 				listNodes[count].dysregulationScore = dysScore; // not incremented because there should only be 1 dysregulation score per geneName?
+				listNodes[count].pValue = pValue; // added
 				listNodes[count].weightCases=listNodes[count].weightCases+1;
 				countTotal++;
-				totalDysScore++;
+				totalDysScore = totalDysScore + dysScore;
 			}
 		}		
 	}
@@ -336,7 +346,7 @@ if (filter==true)
 for (int count=0; count<numNodes; count++) // trace
 {
 	// fprintf(fpOutputGeneScore,"%s %lf %i %i %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].numSevereMutInCases, listNodes[count].numMissenseMutInCases, listNodes[count].weightControl, listNodes[count].length);
-	fprintf(fpOutputGeneScore,"%s %lf %f %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].dysregulationScore, listNodes[count].weightControl, listNodes[count].length);
+	fprintf(fpOutputGeneScore,"%s %lf %f %f %i %i\n", listNodes[count].nodeName, listNodes[count].weightCases, listNodes[count].dysregulationScore, listNodes[count].pValue, listNodes[count].weightControl, listNodes[count].length);
 
 }
 	
